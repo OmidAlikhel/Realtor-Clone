@@ -3,7 +3,7 @@ import React from "react";
 const Offers = () => {
   return (
     <div>
-      <h2> offers</h2>
+      <h2 className="p-"> offers</h2>
     </div>
   );
 };
