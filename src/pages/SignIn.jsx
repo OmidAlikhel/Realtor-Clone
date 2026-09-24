@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { toast } from "react-toastify";
 
 const Signin = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,12 +18,35 @@ const Signin = () => {
       ...prevState,
       [e.target.id]: e.target.value,
     }));
-    console.log(e.target.value);
+    // console.log(e.target.value);
   }
 
   //  show password
 
   const [showPassword, setShowPassword] = useState(false);
+
+  //  sing in functionlity
+
+  async function onSubmit(e) {
+    e.preventDefault();
+
+    try {
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      if (userCredential.user) {
+        navigate("/");
+      }
+      toast.success("successfully signed in");
+    } catch (error) {
+      toast.error(
+        "problem with singing in, please check your email and password",
+      );
+    }
+  }
   return (
     <section>
       <h1 className="text-3xl font-bold text-center mt-6 mb-6"> Sign In </h1>
@@ -87,6 +113,7 @@ const Signin = () => {
               </p>
             </div>{" "}
             <button
+              onClick={onSubmit}
               className="w-full bg-blue-600 text-white px-7 py-3 rounded-lg text-sm font-medium uppercase shadow-md  hover:bg-blue-700 transition duration-200 ease-in-out hover:shadow-lg active:bg-blue-800 "
               type="submit"
             >
