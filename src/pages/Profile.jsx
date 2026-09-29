@@ -1,9 +1,10 @@
 import { getAuth, updateProfile } from "firebase/auth";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { FcHome } from "react-icons/fc";
 
 const Profile = () => {
   const auth = getAuth();
@@ -35,8 +36,10 @@ const Profile = () => {
           name,
         });
       }
-      toast.success("prfile successfully updated. ");
-    } catch (error) {}
+      toast.success("Profile successfully updated. ");
+    } catch (error) {
+      toast.error("Sorry we were not able to update the Profile");
+    }
   }
   // this function will edit the filed and update if changes are made.
   function editDetail() {
@@ -95,6 +98,19 @@ const Profile = () => {
               </p>
             </div>
           </form>
+
+          <button
+            type="submit"
+            className="bg-blue-600 text-white uppercase px-7 py-3 text-sm font-medium w-full rounded shadow-md hover:bg-blue-800 hover:shadow-lg transition duration-200 ease-in-out active:bg-blue-900"
+          >
+            <Link
+              to="/create-listing"
+              className="flex items-center justify-center gap-2"
+            >
+              <FcHome className="mr-2 text-3xl rounded-full bg-red-200  p-1 border-2" />
+              Sell or Rent Your Home
+            </Link>
+          </button>
         </div>
       </section>
     </>
