@@ -1,6 +1,23 @@
 import React, { useState } from "react";
+import Spinner from "../components/Spinner";
+import { toast } from "react-toastify";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+import { getAuth } from "firebase/auth";
+import { v4 as uuidv4 } from "uuid";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 const CreateListing = () => {
+  const navigate = useNavigate();
+  const auth = getAuth();
+  const [geoLocationEnabled, setGeoLocationEnabled] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     type: "rent",
     name: "",
@@ -13,6 +30,9 @@ const CreateListing = () => {
     offer: false,
     regularPrice: 0,
     discountedPrice: 0,
+    latitude: 0,
+    longitude: 0,
+    images: {},
   });
   const {
     type,
@@ -26,19 +46,146 @@ const CreateListing = () => {
     offer,
     regularPrice,
     discountedPrice,
+    latitude,
+    longitude,
+    images,
   } = formData;
-  function onChange() {}
+  function onChange(e) {
+    // files
+    if (e.target.files) {
+      setFormData((prevState) => ({
+        ...prevState,
+        images: e.target.files,
+      }));
+    }
+
+    // convert true and false string to boolean
+    let boolean = null;
+
+    if (e.target.value === "true") {
+      boolean = true;
+    }
+    if (e.target.value === "false") {
+      boolean = false;
+    }
+
+    // text/boolean/number
+    if (!e.target.files) {
+      setFormData((prevState) => ({
+        ...prevState,
+        [e.target.id]: boolean ?? e.target.value,
+      }));
+    }
+  }
+  async function onSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+
+    if (discountedPrice >= regularPrice) {
+      setLoading(false);
+      toast.error("The Discounted Price must be less than regular Price");
+      return;
+    }
+    if (images.length > 6) {
+      setLoading(false);
+      toast.error("Maximum of 6 images are allowed. ");
+      return;
+    }
+    let geoLocation = {};
+    // let location;
+
+    if (geoLocationEnabled) {
+      // Fetch geolocation from Google Maps API
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address,
+        )}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`,
+      );
+
+      const data = await response.json();
+      console.log("GEOCODE RESULT:", data);
+
+      // If Google can't find the address
+      if (data.status !== "OK") {
+        setLoading(false);
+        toast.error("Please enter the correct address.");
+        return;
+      }
+
+      // Extract lat/lng
+      geoLocation.lat = data.results[0]?.geometry.location.lat;
+      geoLocation.lng = data.results[0]?.geometry.location.lng;
+    } else {
+      // Use manual lat/lng
+      geoLocation.lat = latitude;
+      geoLocation.lng = longitude;
+    }
+
+    async function storeImage(image) {
+      return new Promise((resolve, reject) => {
+        const storage = getStorage(); // MUST be called
+        const filename = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`; // NO spaces
+        const storageRef = ref(storage, filename);
+        const uploadTask = uploadBytesResumable(storageRef, image);
+
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+          },
+          (error) => {
+            reject(error); // MUST reject
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              resolve(downloadURL); // MUST resolve
+            });
+          },
+        );
+      });
+    }
+
+    const imgUrls = await Promise.all(
+      [...images].map((image) => storeImage(image)),
+    ).catch((error) => {
+      setLoading(false);
+      toast.error("Images not uploaded");
+      return;
+    });
+
+    const formDataCopy = {
+      ...formData,
+      imgUrls,
+      geoLocation,
+      timeStamp: serverTimestamp(),
+    };
+    delete formDataCopy.images;
+    !formDataCopy.offer && delete formDataCopy.discountedPrice;
+    delete formDataCopy.latitude;
+    delete formDataCopy.longitude;
+    const docRef = await addDoc(collection(db, "listings"), formDataCopy);
+    setLoading(false);
+    toast.success("Listing created");
+    navigate(`/catagory/${formDataCopy.type}/${docRef.id}`);
+  }
+
+  if (loading) {
+    return <Spinner />;
+  }
+
   return (
     <main>
       <h1 className="text-3xl text-center mt-6 font-bold ">Create a Listing</h1>
 
-      <form className="max-w-md px-2 mx-auto">
+      <form onSubmit={onSubmit} className="max-w-md px-2 mx-auto">
         <p className="text-lg mt-6 mb-4 font-semibold ">Sell/Rent</p>
         <div className="flex  space-x-4">
           <button
             type="button"
             id="type"
-            value="rent"
+            value="sale"
             onClick={onChange}
             className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${type === "rent" ? "bg-white text-black" : "bg-slate-600 text-white"}`}
           >
@@ -47,7 +194,7 @@ const CreateListing = () => {
           <button
             type="button"
             id="type"
-            value="sale"
+            value="rent"
             onClick={onChange}
             className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${type === "sale" ? "bg-white text-black" : "bg-slate-600 text-white"}`}
           >
@@ -107,7 +254,7 @@ const CreateListing = () => {
           </button>
           <button
             type="button"
-            id="type"
+            id="parking"
             value={false}
             onClick={onChange}
             className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${parking ? "bg-white text-black" : "bg-slate-600 text-white"}`}
@@ -122,7 +269,7 @@ const CreateListing = () => {
             id="furnished"
             value={true}
             onClick={onChange}
-            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${!furnished ? "bg-white text-black" : "bg-slate-600 text-white"}`}
+            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${furnished ? "bg-slate-600 text-white" : "bg-white text-black"}`}
           >
             Yes
           </button>
@@ -131,7 +278,7 @@ const CreateListing = () => {
             id="furnished"
             value={false}
             onClick={onChange}
-            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${furnished === "sale" ? "bg-white text-black" : "bg-slate-600 text-white"}`}
+            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${!furnished ? "bg-slate-600 text-white" : "bg-white text-black"}`}
           >
             no
           </button>
@@ -148,6 +295,36 @@ const CreateListing = () => {
           required
           className=" w-full px-4 py-2 text-xl text-gray-600 bg-white border border-gray-300 rounded my-2 transition duration-150 ease-in-out focus:text-gray-800 focus:bg-white focus:border-slate-600 mb-6"
         />
+        {!geoLocationEnabled && (
+          <div className="flex space-x-6 justify-start mb-6">
+            <div>
+              <p className="text-lg font-semibold ">Latitude</p>
+              <input
+                className="w-full bg-white border border-slate-300 px-4 py-2 rounded text-xl text-gray-700 transition duration-150 ease-in-out shadow focus:bg-white focus:text-gray-700 focus:border-slate-600 text-center"
+                type="number"
+                id="latitude"
+                value={latitude}
+                onChange={onChange}
+                required
+                min="-90"
+                max="90"
+              />
+            </div>
+            <div>
+              <p className="text-lg font-semibold ">Longitude</p>
+              <input
+                className="w-full bg-white border border-slate-300 px-4 py-2 rounded text-xl text-gray-700 transition duration-150 ease-in-out shadow focus:bg-white focus:text-gray-700 focus:border-slate-600 text-center"
+                type="number"
+                id="longitude"
+                value={longitude}
+                onChange={onChange}
+                required
+                min="-180"
+                max="180"
+              />
+            </div>
+          </div>
+        )}
         <p className="text-lg  font-semibold"> Description </p>
         <textarea
           type="text"
@@ -167,7 +344,7 @@ const CreateListing = () => {
             id="offer"
             value={true}
             onClick={onChange}
-            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${!furnished ? "bg-white text-black" : "bg-slate-600 text-white"}`}
+            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${offer ? "bg-slate-600 text-white" : "bg-white text-black"}`}
           >
             Yes
           </button>
@@ -176,7 +353,7 @@ const CreateListing = () => {
             id="offer"
             value={false}
             onClick={onChange}
-            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${!offer === "sale" ? "bg-white text-black" : "bg-slate-600 text-white"}`}
+            className={`px-7 py-3 font-medium text-sm uppercase shadow-md rounded hover:shadow-lg  focus:shadow-lg active:shadow-lg transition duration-150 ease-in-out w-full ${!offer ? "bg-slate-600 text-white" : "bg-white text-black"}`}
           >
             no
           </button>
