@@ -30,6 +30,7 @@ const Listing = () => {
 
     fetchListing();
   }, [params.listingId]);
+  // below line shows if loading is not true show swiper
 
   if (loading) {
     return <Spinner />;
