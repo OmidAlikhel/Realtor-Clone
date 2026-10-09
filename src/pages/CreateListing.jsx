@@ -57,23 +57,23 @@ const CreateListing = () => {
         ...prevState,
         images: e.target.files,
       }));
+      return;
     }
 
     // convert true and false string to boolean
     let boolean = null;
 
-    if (e.target.value === "true") {
-      boolean = true;
-    }
-    if (e.target.value === "false") {
-      boolean = false;
-    }
+    if (e.target.value === "true") boolean = true;
+
+    if (e.target.value === "false") boolean = false;
 
     // text/boolean/number
     if (!e.target.files) {
+      const isNumber = e.target.type === "number";
       setFormData((prevState) => ({
         ...prevState,
-        [e.target.id]: boolean ?? e.target.value,
+        [e.target.id]:
+          boolean ?? (isNumber ? Number(e.target.value) : e.target.value),
       }));
     }
   }
