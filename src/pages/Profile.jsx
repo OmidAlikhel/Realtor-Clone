@@ -16,13 +16,22 @@ import { db } from "../firebase";
 import { FcHome } from "react-icons/fc";
 import ListingItem from "../components/ListingItem";
 
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import { FcHome } from "react-icons/fc";
+
 const Profile = () => {
   const auth = getAuth();
   const navigate = useNavigate();
 
   const [changeDetail, setChangeDetail] = useState(false);
+
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     name: auth.currentUser.displayName,
     email: auth.currentUser.email,
@@ -103,6 +112,7 @@ const Profile = () => {
   function onEdit(listingID) {
     navigate(`/edit-listing/${listingID}`);
   }
+
   return (
     <>
       <section className="max-w-6xl mx-auto flex justify-center items-center  flex-col">

@@ -57,12 +57,16 @@ const CreateListing = () => {
         ...prevState,
         images: e.target.files,
       }));
+<<<<<<< HEAD
       return;
+=======
+>>>>>>> 29f4ffd01c7dfced819ddcfe2c1c82798e8bc959
     }
 
     // convert true and false string to boolean
     let boolean = null;
 
+<<<<<<< HEAD
     if (e.target.value === "true") boolean = true;
 
     if (e.target.value === "false") boolean = false;
@@ -74,6 +78,20 @@ const CreateListing = () => {
         ...prevState,
         [e.target.id]:
           boolean ?? (isNumber ? Number(e.target.value) : e.target.value),
+=======
+    if (e.target.value === "true") {
+      boolean = true;
+    }
+    if (e.target.value === "false") {
+      boolean = false;
+    }
+
+    // text/boolean/number
+    if (!e.target.files) {
+      setFormData((prevState) => ({
+        ...prevState,
+        [e.target.id]: boolean ?? e.target.value,
+>>>>>>> 29f4ffd01c7dfced819ddcfe2c1c82798e8bc959
       }));
     }
   }
@@ -160,7 +178,10 @@ const CreateListing = () => {
       imgUrls,
       geoLocation,
       timeStamp: serverTimestamp(),
+<<<<<<< HEAD
       userRef: auth.currentUser.uid,
+=======
+>>>>>>> 29f4ffd01c7dfced819ddcfe2c1c82798e8bc959
     };
     delete formDataCopy.images;
     !formDataCopy.offer && delete formDataCopy.discountedPrice;
@@ -333,7 +354,11 @@ const CreateListing = () => {
           placeholder="Description"
           value={description}
           onChange={onChange}
+<<<<<<< HEAD
           maxLength="80"
+=======
+          maxLength="32"
+>>>>>>> 29f4ffd01c7dfced819ddcfe2c1c82798e8bc959
           minLength="4"
           required
           className=" w-full px-4 py-2 text-xl text-gray-600 bg-white border border-gray-300 rounded my-2 transition duration-150 ease-in-out focus:text-gray-800 focus:bg-white focus:border-slate-600 mb-6"
