@@ -20,6 +20,21 @@ import {
 } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 import Contact from "../components/Contact";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+// below imports are related to the map location icon showing functionality it, was just copied and pasted
+import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const Listing = () => {
   const params = useParams();
@@ -45,7 +60,15 @@ const Listing = () => {
   }, [params.listingId]);
   // below line shows if loading is not true show swiper
 
+  // if (loading) {
+  //   return <Spinner />;
+  // }
+
   if (loading) {
+    return <Spinner />;
+  }
+
+  if (!listing || !listing.geoLocation) {
     return <Spinner />;
   }
   return (
@@ -61,7 +84,7 @@ const Listing = () => {
         {listing.imgUrls.map((url, index) => (
           <SwiperSlide key={index}>
             <div
-              className=" relative w-full overflow-hidden h-[300px]"
+              className=" relative w-full overflow-hidden h-[300px] md:h-[400px] lg:h0[500px]"
               style={{
                 backgroundImage: `url(${listing.imgUrls[index]})`,
                 backgroundPosition: "center",
@@ -92,7 +115,8 @@ const Listing = () => {
       )}
 
       <div className="m-4 flex flex-col md:flex-row max-w-6xl lg:mx-auto p-4 rounded-lg  shadow-lg bg-white lg:space-x-5 ">
-        <div className="w-full ">
+        {/*  */}
+        <div className="w-full md:w-1/2">
           <p className="text-2xl font-bold  mb-3 text-blue-900">
             {listing.name} - $
             {listing.offer
@@ -163,7 +187,24 @@ const Listing = () => {
             <Contact userRef={listing.userRef} listing={listing} />
           )}
         </div>
-        <div className="bg-blue-300 w-full h-[200px] lg:h-[400px] z-10 overflow-x-hidden"></div>
+        <div className="z-10 sm:ml-2 h-[300px] lg:h-[400px] overflow-x-hidden rounded mt-6 md:w-1/2">
+          <MapContainer
+            center={[listing.geoLocation.lat, listing.geoLocation.lng]}
+            zoom={13}
+            scrollWheelZoom={false}
+            style={{ height: "100%", width: "100%" }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker
+              position={[listing.geoLocation.lat, listing.geoLocation.lng]}
+            >
+              <Popup>{listing.address}</Popup>
+            </Marker>
+          </MapContainer>
+        </div>
       </div>
     </main>
   );

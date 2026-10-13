@@ -16,13 +16,6 @@ import { db } from "../firebase";
 import { FcHome } from "react-icons/fc";
 import ListingItem from "../components/ListingItem";
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import { FcHome } from "react-icons/fc";
-
 const Profile = () => {
   const auth = getAuth();
   const navigate = useNavigate();

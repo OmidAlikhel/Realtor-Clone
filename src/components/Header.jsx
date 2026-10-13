@@ -12,9 +12,9 @@ const Header = () => {
   function pathMatchRoute(route) {
     return location.pathname === route;
 
-    if (route === location.pathname) {
-      return true;
-    }
+    // if (route === location.pathname) {
+    //   return true;
+    // }
   }
 
   useEffect(() => {
@@ -41,14 +41,12 @@ const Header = () => {
           <ul className="flex space-x-10 ">
             <li
               className={`cursor-pointer py-3 text-sm font-semibold  ${pathMatchRoute("/") ? "text-black border-b-[3px] border-b-red-500 " : "text-gray-400 border-b-transparent"}`}
-              className={`cursor-pointer py-3 text-sm font-semibold text-gray-400 border-b-[3px] border-b-transparent ${pathMatchRoute("/") && "text-black border-b-red-500 "}`}
               onClick={() => navigate("/")}
             >
               Home
             </li>
             <li
               className={`cursor-pointer py-3 text-sm font-semibold  ${pathMatchRoute("/offers") ? "text-black border-b-[3px] border-b-red-500 " : "text-gray-400 border-b-[3px] border-b-transparent"}`}
-              className={`cursor-pointer py-3 text-sm font-semibold text-gray-400 border-b-[3px] border-b-transparent ${pathMatchRoute("/offers") && "text-black border-b-red-500 "}`}
               onClick={() => navigate("/offers")}
             >
               Offers
@@ -60,7 +58,6 @@ const Header = () => {
         ? "text-black border-b-[3px] border-b-red-500"
         : "text-gray-400 border-b-[3px] border-b-transparent"
     }`}
-              className={`cursor-pointer py-3 text-sm font-semibold text-gray-400 border-b-[3px] border-b-transparent ${pathMatchRoute("/sign-in") || (pathMatchRoute("/profile") && "text-black border-b-red-500 ")}`}
               onClick={() => navigate("/profile")}
             >
               {pageState}
