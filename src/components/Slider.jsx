@@ -30,8 +30,6 @@ const Slider = () => {
         });
       });
 
-      console.log("FETCHED LISTINGS:", listings);
-
       setListings(listings);
       setLoading(false);
     }
@@ -63,7 +61,7 @@ const Slider = () => {
               }
             >
               <div
-                className="relative w-full overflow-hidden h-[300px] md:h-[400px] lg:h-[500px]"
+                className="relative w-full overflow-hidden h-[200px] md:h-[300px] lg:h-[400px]"
                 style={{
                   backgroundImage: `url(${listing.data.imgUrls[0]})`,
                   backgroundPosition: "center",
@@ -81,8 +79,6 @@ const Slider = () => {
             </SwiperSlide>
           ))}
         </Swiper>
-
-        <div>slider</div>
       </>
     )
   );
