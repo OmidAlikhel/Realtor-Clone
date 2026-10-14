@@ -136,7 +136,7 @@ const Home = () => {
             <h2 className="px-3 text-2xl font-semibold mt-6 ">
               Recent Sale listings
             </h2>
-            <Link to="/category/sales">
+            <Link to="/category/sale">
               <p className="px-3  mt-2 text-blue-500 cursor-pointer text-sm hover:text-blue-700 transition duration-150 ease-in-out ">
                 Show More Sales
               </p>
